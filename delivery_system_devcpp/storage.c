@@ -59,7 +59,7 @@ static void loadFromDatabase(char* filepath)
 	// 데이터베이스를 탐색
 	while (1)
 	{
-		char buffer[MAX_MSG_SIZE];
+		char buffer[MAX_MSG_SIZE * 2];
 
 		// 데이터베이스로부터 한 문장을 읽어옴
 		fgets(buffer, sizeof(buffer), fp);
@@ -158,7 +158,6 @@ int str_backupSystem(char* filepath) {
 	int i = 0, j = 0;
 	FILE* fp;
 	char systemRowCol[10];
-	char temp_masterPassword[10];
 
 	// 텍스트 파일을 새로 덮어씌우기 위해 "w" 모드로 오픈
 	fp = fopen(filepath, "w");
@@ -167,14 +166,14 @@ int str_backupSystem(char* filepath) {
 		return -1;
 	}
 
-	// 시스템의 행과 열을 데이터베이스에 입력
+	// 시스템의 행과 열을 데이터베이스에 업데이트 
 	sprintf(systemRowCol, "%d %d\n", systemSize[0], systemSize[1]);
 	fputs(systemRowCol, fp);
 
-	// 시스템의 마스터 패스워드를 데이터베이스에 입력
+	// 시스템의 마스터 패스워드를 데이터베이스에 업데이트 
 	fputs(masterPassword, fp);
 
-	// 시스템의 현재 상태를 업데이트
+	// 시스템의 현재 상태를 데이터베이스에 업데이트
 	for (i = 0; i < systemSize[0]; i++)
 	{
 		for (j = 0; j < systemSize[1]; j++)
@@ -204,7 +203,7 @@ int str_createSystem(char* filepath) {
 
 	int i = 0, j = 0, lineCnt = 0, alloc_flag = 0;
 	FILE* fp;
-	char buffer[MAX_MSG_SIZE];
+	char buffer[MAX_MSG_SIZE * 2];
 
 	fp = fopen(filepath, "r");
 
