@@ -135,7 +135,46 @@ static int inputPasswd(int x, int y) {
 //char* filepath : filepath and name to write
 //return : 0 - backup was successfully done, -1 - failed to backup
 int str_backupSystem(char* filepath) {
+	
+	int i = 0, j = 0;
+	FILE* fp;
+	char systemRowCol[10];
+	char temp_masterPassword[10];
 
+	// 텍스트 파일을 새로 덮어씌우기 위해 "w" 모드로 오픈
+	fp = fopen(filepath, "w");
+	if (fp == NULL)
+	{
+		return -1;
+	}
+
+	// 시스템의 행과 열을 입력
+	sprintf(systemRowCol, "%d %d\n", systemSize[0], systemSize[1]);
+	fputs(systemRowCol, fp);
+
+	// 시스템의 마스터 패스워드를 입력
+	fputs(masterPassword, fp);
+
+	// 시스템의 현재 상태를 업데이트
+	for (i = 0; i < systemSize[0]; i++)
+	{
+		for (j = 0; j < systemSize[1]; j++)
+		{
+			if (deliverySystem[i][j].cnt == 1)
+			{
+				char temp[MAX_MSG_SIZE];
+				sprintf(temp, "%d %d %d %d %s %s\n", i, j,
+					deliverySystem[i][j].building,
+					deliverySystem[i][j].room,
+					deliverySystem[i][j].passwd,
+					deliverySystem[i][j].context);
+				fputs(temp, fp);
+			}
+		}
+	}
+	
+	fclose(fp);
+	return 0;
 }
 
 //create delivery system on the double pointer deliverySystem
@@ -163,7 +202,11 @@ int str_createSystem(char* filepath) {
 	ptr = strtok(NULL, "\n");
 	systemSize[1] = atoi(ptr); // 열
 
-	fclose(fp);
+	// 시스템의 마스터 패스워드를 결정
+	fgets(buffer, sizeof(buffer), fp);
+	strcpy(masterPassword, buffer);
+
+	fclose(fp); // 파일 포인터를 해제
 
 	// 무인 보관함 시스템에 메모리 동적 할당
 	deliverySystem = (storage_t**)malloc(sizeof(storage_t*) * systemSize[0]);
@@ -250,6 +293,8 @@ int str_checkStorage(int x, int y) {
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE + 1], char passwd[PASSWD_LEN + 1]) {
 
 	// 셀에 패키지를 집어넣는 함수
+	
+
 
 }
 
@@ -269,7 +314,20 @@ int str_extractStorage(int x, int y) {
 //return : number of packages that the storage system has
 int str_findStorage(int nBuilding, int nRoom) {
 
+	int i = 0, j = 0, cnt = 0;
 
+	for (i = 0; i < systemSize[0]; i++)
+	{
+		for (j = 0; j < systemSize[1]; j++)
+		{
+			if (deliverySystem[i][j].building == nBuilding 
+				&& deliverySystem[i][j].room == nRoom)
+			{
+				printf("----------->Found a package in(%d, %d)\n", i, j);
+				cnt++;
+			}		
+		}
+	}
 
-	return 0;
+	return cnt;
 }
