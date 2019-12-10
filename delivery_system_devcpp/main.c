@@ -7,7 +7,7 @@
 #define N_FLOOR					10		// 층의 수
 #define N_ROOM					10		// 각 층에 있는 세대 수
 
-#define STORAGE_FILEPATH 		"storage.txt"	// 파
+#define STORAGE_FILEPATH 		"storage.txt"	// 파일 경로
 
 //get an integer value from keyboard
 int getIntegerInput(void)
@@ -132,6 +132,9 @@ int main(int argc, char* argv[]) {
 
 			//4-3. command analysis : extract my package
 		case 2:
+			//provide the current status
+			str_printStorageStatus();
+			
 			//input the storage cell
 			printf(" - storage row : ");
 			x = getIntegerInput();
@@ -195,3 +198,4 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
