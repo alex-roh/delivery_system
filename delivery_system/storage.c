@@ -252,9 +252,14 @@ int str_createSystem(char* filepath) {
 //free the memory of the deliverySystem 
 void str_freeSystem(void) {
 
+	int i;
 
+	for (i = 0; i < systemSize[0]; i++)
+	{
+		free(deliverySystem[i]);
+	}
 
-
+	free(deliverySystem);
 
 }
 
