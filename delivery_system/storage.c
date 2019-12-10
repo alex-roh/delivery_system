@@ -63,7 +63,7 @@ static void loadFromDatabase(char* filepath)
 
 		// 데이터베이스로부터 한 문장을 읽어옴
 		fgets(buffer, sizeof(buffer), fp);
-			
+
 		// 파일의 끝에 도달한 경우
 		if (feof(fp))
 		{
@@ -100,8 +100,10 @@ static void loadFromDatabase(char* filepath)
 
 		// 내용물의 개수 (cnt)
 		deliverySystem[row][column].cnt = 1;
-	}
 
+		// 전체 저장소 내용물 개수 업데이트
+		storedCnt++;
+	}
 }
 
 //initialize the storage
@@ -127,6 +129,23 @@ static void initStorage(int x, int y) {
 //return : 0 - password is matching, -1 - password is not matching
 static int inputPasswd(int x, int y) {
 
+	char passwd[PASSWD_LEN + 1];
+
+	printf(" - input password for (%d, %d) storage: ", x, y);
+	scanf("%s", passwd);
+	fflush(stdin);
+
+	// 마스터 패스워드를 입력하거나, 올바른 패스워드를 입력한 경우
+	if (strcmp(masterPassword, passwd) == 0
+		|| strcmp(deliverySystem[x][y].passwd, passwd) == 0)
+	{
+		return 0;
+	}
+	// 틀린 패스워드를 입력한 경우
+	else 
+	{
+		return -1;
+	}
 }
 
 // ------- API function for main.c file ---------------
@@ -148,11 +167,11 @@ int str_backupSystem(char* filepath) {
 		return -1;
 	}
 
-	// 시스템의 행과 열을 입력
+	// 시스템의 행과 열을 데이터베이스에 입력
 	sprintf(systemRowCol, "%d %d\n", systemSize[0], systemSize[1]);
 	fputs(systemRowCol, fp);
 
-	// 시스템의 마스터 패스워드를 입력
+	// 시스템의 마스터 패스워드를 데이터베이스에 입력
 	fputs(masterPassword, fp);
 
 	// 시스템의 현재 상태를 업데이트
@@ -172,7 +191,7 @@ int str_backupSystem(char* filepath) {
 			}
 		}
 	}
-	
+
 	fclose(fp);
 	return 0;
 }
@@ -233,12 +252,17 @@ int str_createSystem(char* filepath) {
 //free the memory of the deliverySystem 
 void str_freeSystem(void) {
 
+
+
+
+
 }
 
 //print the current state of the whole delivery system (which cells are occupied and the destination of the each occupied cells)
 void str_printStorageStatus(void) {
 	int i, j;
-	printf("----------------------------- Delivery Storage System Status (%i occupied out of %i )-----------------------------\n\n", storedCnt, systemSize[0] * systemSize[1]);
+	printf("----------------------------- Delivery Storage System Status (%i occupied out of %i )-----------------------------\n\n",
+		storedCnt, systemSize[0] * systemSize[1]);
 
 	printf("\t");
 
@@ -292,10 +316,25 @@ int str_checkStorage(int x, int y) {
 //return : 0 - successfully put the package, -1 - failed to put
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE + 1], char passwd[PASSWD_LEN + 1]) {
 
+	// 넣고자 하는 셀이 이미 차 있는 경우
+	if (deliverySystem[x][y].cnt == 1)
+	{
+		return -1;
+	}
+
 	// 셀에 패키지를 집어넣는 함수
-	
+	deliverySystem[x][y].building = nBuilding;
+	deliverySystem[x][y].room = nRoom;
+	deliverySystem[x][y].cnt = 1;
+	strcpy(deliverySystem[x][y].passwd, passwd);
+	strcpy(deliverySystem[x][y].context, msg);
 
+	// 전체 내용물의 개수를 1 증가시킴
+	storedCnt++;
 
+	fflush(stdin);
+
+	return 0;
 }
 
 //extract the package context with password checking
@@ -304,8 +343,37 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 //return : 0 - successfully extracted, -1 = failed to extract
 int str_extractStorage(int x, int y) {
 
-	// 셀에서 패키지를 추출하는 함수
+	// 패스워드가 일치할 때에만 패키지를 추출 가능
+	if (inputPasswd(x, y) == 0)
+	{
+		// 해당 셀에 패키지가 있는 경우
+		if (deliverySystem[x][y].cnt == 1)
+		{
+			printf(" ----------->extracting the storage(%d, %d)...", x, y);
+			deliverySystem[x][y].building = 0;
+			deliverySystem[x][y].room = 0;
+			deliverySystem[x][y].cnt = 0;
+			strcpy(deliverySystem[x][y].passwd, "0");
+			free(deliverySystem[x][y].context);
+			deliverySystem[x][y].context = (char*)malloc(sizeof(char) * MAX_MSG_SIZE);
+			strcpy(deliverySystem[x][y].context, "0");
 
+			// 전체 저장소 내용물 개수 감소
+			storedCnt--;
+		}
+		else 
+		{
+			// 해당 셀에 패키지가 없는 경우
+			return -1;
+		}
+	}
+	// 패스워드가 일치하지 않는 경우
+	else
+	{
+		return -1;
+	}
+
+	return 0;
 }
 
 //find my package from the storage
