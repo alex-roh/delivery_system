@@ -95,7 +95,8 @@ static void loadFromDatabase(char* filepath)
 
 		// 내용물
 		ptr = strtok(NULL, "\n");
-		deliverySystem[row][column].context = (char*)malloc(sizeof(char) * MAX_MSG_SIZE);
+		int length = strlen(ptr) + 1;
+		deliverySystem[row][column].context = (char*)malloc(sizeof(char) * length);
 		strcpy(deliverySystem[row][column].context, ptr);
 
 		// 내용물의 개수 (cnt)
@@ -108,7 +109,6 @@ static void loadFromDatabase(char* filepath)
 
 //initialize the storage
 //set all the member variable as an initial value
-//and allocate memory to the context pointer
 //int x, int y : cell coordinate to be initialized
 static void initStorage(int x, int y) {
 
@@ -119,8 +119,6 @@ static void initStorage(int x, int y) {
 		deliverySystem[x][y].room = 0;
 		deliverySystem[x][y].cnt = 0;
 		strcpy(deliverySystem[x][y].passwd, "0");
-		deliverySystem[x][y].context = (char*)malloc(sizeof(char) * MAX_MSG_SIZE);
-		strcpy(deliverySystem[x][y].context, "0");
 	}
 }
 
@@ -251,15 +249,27 @@ int str_createSystem(char* filepath) {
 //free the memory of the deliverySystem 
 void str_freeSystem(void) {
 
-	int i;
-
+	int i, j;
+	
+	// 무인 보관함 시스템에 있는 패키지들을 초기화 
+	for (i = 0; i < systemSize[0]; i++)
+	{
+		for (j = 0; j < systemSize[1]; j++)
+		{
+			if(deliverySystem[i][j].cnt == 1)
+			{
+				free(deliverySystem[i][j].context);
+			} 
+		}
+	}
+	
+	// 무인 보관함 시스템 구조체를 초기화 
 	for (i = 0; i < systemSize[0]; i++)
 	{
 		free(deliverySystem[i]);
 	}
 
 	free(deliverySystem);
-
 }
 
 //print the current state of the whole delivery system (which cells are occupied and the destination of the each occupied cells)
@@ -320,6 +330,8 @@ int str_checkStorage(int x, int y) {
 //return : 0 - successfully put the package, -1 - failed to put
 int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_SIZE + 1], char passwd[PASSWD_LEN + 1]) {
 
+	int length = strlen(msg) + 1;
+
 	// 넣고자 하는 셀이 이미 차 있는 경우
 	if (deliverySystem[x][y].cnt == 1)
 	{
@@ -330,6 +342,7 @@ int str_pushToStorage(int x, int y, int nBuilding, int nRoom, char msg[MAX_MSG_S
 	deliverySystem[x][y].building = nBuilding;
 	deliverySystem[x][y].room = nRoom;
 	deliverySystem[x][y].cnt = 1;
+	deliverySystem[x][y].context = (char*)malloc(sizeof(char) * length);
 	strcpy(deliverySystem[x][y].passwd, passwd);
 	strcpy(deliverySystem[x][y].context, msg);
 
@@ -359,8 +372,6 @@ int str_extractStorage(int x, int y) {
 			deliverySystem[x][y].cnt = 0;
 			strcpy(deliverySystem[x][y].passwd, "0");
 			free(deliverySystem[x][y].context);
-			deliverySystem[x][y].context = (char*)malloc(sizeof(char) * MAX_MSG_SIZE);
-			strcpy(deliverySystem[x][y].context, "0");
 
 			// 전체 저장소 내용물 개수 감소
 			storedCnt--;
