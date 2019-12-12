@@ -261,14 +261,10 @@ void str_freeSystem(void) {
 				free(deliverySystem[i][j].context);
 			} 
 		}
+		free(deliverySystem[i]);
 	}
 	
 	// 무인 보관함 시스템 구조체를 초기화 
-	for (i = 0; i < systemSize[0]; i++)
-	{
-		free(deliverySystem[i]);
-	}
-
 	free(deliverySystem);
 }
 
